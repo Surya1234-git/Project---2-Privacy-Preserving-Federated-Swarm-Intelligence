@@ -1,0 +1,76 @@
+# One command, whole federated network:
+#   docker compose up --build
+# Scale the swarm:  NUM_NODES=300 NUM_CONTAINERS=10 docker compose up --build
+name: fedswarm
+
+x-image: &image
+  build: .
+  image: fedswarm:week1
+
+networks:
+  fednet:          # private virtual network: clients only talk to the server
+
+services:
+  data-prep:       # runs once: splits the dataset into private, non-IID per-node shards
+    <<: *image
+    command:
+      - python
+      - -m
+      - fedswarm.cli.prepare_data
+      - --dataset
+      - ${DATASET:-mnist}
+      - --num-nodes
+      - ${NUM_NODES:-100}
+      - --partition
+      - ${PARTITION:-dirichlet}
+      - --alpha
+      - ${ALPHA:-0.3}
+      - --seed
+      - ${SEED:-42}
+    volumes:
+      - ./data:/app/data
+      - ./results:/app/results
+
+  server:          # aggregator: sees ONLY the global test set and model weights
+    <<: *image
+    command: ["python", "-m", "fedswarm.cli.server"]
+    depends_on:
+      data-prep:
+        condition: service_completed_successfully
+    environment:
+      NUM_NODES: ${NUM_NODES:-100}
+      NUM_CONTAINERS: ${NUM_CONTAINERS:-8}
+      ROUNDS: ${ROUNDS:-30}
+      CLIENT_FRACTION: ${CLIENT_FRACTION:-0.1}
+      LOCAL_EPOCHS: ${LOCAL_EPOCHS:-1}
+      BATCH_SIZE: ${BATCH_SIZE:-32}
+      LR: ${LR:-0.01}
+      MU: ${MU:-0.0}
+      SEED: ${SEED:-42}
+    ports:
+      - "5000:5000"          # open http://localhost:5000/status while training
+    volumes:
+      - ./data/server:/app/data/server:ro     # NOTE: ./data/nodes is NOT mounted here
+      - ./results:/app/results
+    networks: [fednet]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+      start_period: 5s
+
+  client:          # edge-node containers (replicated); each hosts NUM_NODES/NUM_CONTAINERS logical nodes
+    <<: *image
+    command: ["python", "-m", "fedswarm.cli.client"]
+    depends_on:
+      server:
+        condition: service_healthy
+    environment:
+      SERVER_URL: http://server:5000
+      TORCH_THREADS: "1"
+    volumes:
+      - ./data/nodes:/app/data/nodes:ro       # private shards live here, never on the server
+    networks: [fednet]
+    deploy:
+      replicas: ${NUM_CONTAINERS:-8}

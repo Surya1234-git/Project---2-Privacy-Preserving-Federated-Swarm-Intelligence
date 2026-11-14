@@ -1,0 +1,6 @@
+# Install PyTorch separately first (CPU build is enough):
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+numpy>=1.26
+flask>=3.0
+requests>=2.31
+matplotlib>=3.8

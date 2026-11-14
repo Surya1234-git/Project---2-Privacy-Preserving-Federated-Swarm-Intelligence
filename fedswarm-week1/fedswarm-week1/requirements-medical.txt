@@ -1,0 +1,2 @@
+# Optional: real medical-image datasets (BloodMNIST, PathMNIST, DermaMNIST, ...)
+medmnist>=3.0
