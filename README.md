@@ -1,0 +1,7 @@
+FedSwarm is a privacy-preserving federated learning framework that trains deep neural networks across hundreds of simulated edge devices, such as mobile phones and IoT sensors, without ever sending raw data to a central server. Each device keeps its data locally, trains a model on it, and shares only model updates with an aggregator. The project simulates real-world conditions by running isolated client nodes in Docker containers and distributing a highly non-IID (non-identically distributed) dataset across them, so every node sees a different, skewed slice of the data. A central server coordinates training rounds using the Federated Averaging (FedAvg) algorithm and evaluates the global model after every round. In the upcoming phases, the system will add Fully Homomorphic Encryption (FHE) so the server can aggregate encrypted weights without seeing any individual device’s update, followed by differential privacy and Byzantine-fault-tolerant aggregation to defend against data leakage and poisoning attacks.
+Project Status
+Week 1 (done): Docker-based edge network, non-IID data partitioning, baseline FedAvg
+Week 2 (planned): FHE with TenSEAL, aggregation on encrypted weights, CI/CD
+Week 3 (planned): Gradient quantization and sparsification, differential privacy, Byzantine fault tolerance
+Week 4 (planned): Benchmarks, admin dashboard, security documentation
+Developed as part of the Data Science & Machine Learning internship at Zaalima Development Pvt. Ltd. by a team of four.
