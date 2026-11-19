@@ -1,0 +1,3 @@
+#!/bin/sh
+# Enforces docs/GIT_WORKFLOW.md commit policy. Enable with: git config core.hooksPath .githooks
+exec python3 scripts/check_commit_msg.py "$1"

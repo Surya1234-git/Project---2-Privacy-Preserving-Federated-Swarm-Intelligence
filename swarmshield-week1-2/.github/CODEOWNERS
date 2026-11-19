@@ -1,0 +1,6 @@
+# Cryptographic code needs a second pair of eyes before merge (see docs/GIT_WORKFLOW.md).
+# Replace @your-github-handle / @reviewer-handle with real accounts.
+/swarm/crypto/            @your-github-handle @reviewer-handle
+/tests/test_crypto.py     @your-github-handle @reviewer-handle
+/swarm/security.py        @your-github-handle @reviewer-handle
+/.github/                 @your-github-handle

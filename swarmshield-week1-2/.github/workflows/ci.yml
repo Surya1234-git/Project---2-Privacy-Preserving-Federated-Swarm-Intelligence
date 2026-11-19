@@ -1,0 +1,93 @@
+name: ci
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  commit-policy:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - name: Every commit in the PR follows the policy
+        run: python scripts/check_commit_msg.py --range origin/${{ github.base_ref }}..HEAD
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install ruff
+      - run: ruff check .
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "${{ matrix.python }}", cache: pip}
+      - run: pip install -r requirements-dev.txt
+      - name: Unit + protocol tests
+        run: pytest -m "not integration"
+      - name: Integration (real aggregator + edge-node processes over HTTP)
+        run: pytest -m integration
+
+  crypto-gate:
+    # Runs always (cheap), and ENFORCES review when cryptographic files changed.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11", cache: pip}
+      - run: pip install -r requirements.txt
+      - name: Mathematical validation of encrypted aggregation
+        run: python scripts/validate_encrypted_aggregation.py --quick
+      - uses: actions/upload-artifact@v4
+        with:
+          name: encrypted-aggregation-validation
+          path: reports/encrypted_aggregation_validation.*
+      - name: Require `crypto-reviewed` label when crypto code changed
+        if: github.event_name == 'pull_request'
+        run: |
+          changed=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+          if echo "$changed" | grep -E '^(swarm/crypto/|swarm/security.py|tests/test_crypto.py)' >/dev/null; then
+            echo "Cryptographic code changed."
+            if ! jq -e '[.pull_request.labels[].name] | index("crypto-reviewed")' "$GITHUB_EVENT_PATH" >/dev/null; then
+              echo "::error::PR touches crypto code but lacks the 'crypto-reviewed' label (set after a second reviewer approves)."
+              exit 1
+            fi
+          fi
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11", cache: pip}
+      - run: pip install -r requirements.txt
+      - name: Generate a 12-node swarm and validate the compose file
+        run: |
+          python -m swarm.data.prepare --nodes 12 --alpha 0.3 --samples 6000 --min-size 40 --out data/shards
+          python scripts/gen_compose.py --shards data/shards --mode fhe --out docker-compose.yml
+          docker compose config -q
+      - name: Build image
+        run: docker build -t swarmshield:ci .
+      - name: Smoke-run the container swarm (3 rounds, encrypted)
+        run: |
+          python scripts/gen_compose.py --shards data/shards --mode fhe --rounds 3 --participation 0.5 --out docker-compose.yml
+          mkdir -p runs && chmod 777 runs
+          timeout 600 docker compose up --abort-on-container-exit --exit-code-from aggregator
+          test -f runs/latest/summary.json && cat runs/latest/summary.json

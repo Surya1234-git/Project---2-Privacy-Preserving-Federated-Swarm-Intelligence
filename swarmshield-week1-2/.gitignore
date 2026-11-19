@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+# generated artefacts - regenerate with `make data` / `make keys`
+data/shards/
+runs/
+keys/
+*.ctx
+# keep the committed reports folder, ignore scratch output
+reports/*.tmp
+.env

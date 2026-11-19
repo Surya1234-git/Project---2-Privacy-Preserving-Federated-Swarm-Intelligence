@@ -1,0 +1,152 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "name": "homomorphism: Dec(sum p_k Enc(w_k)) == sum p_k w_k",
+      "passed": true,
+      "worst_relative_err": 4.360288237137411e-07,
+      "tolerance": 1e-05,
+      "trials": [
+        {
+          "dim": 10,
+          "magnitude": 0.001,
+          "clients": 2,
+          "chunks": 1,
+          "max_abs_err": 2.861073362614105e-09
+        },
+        {
+          "dim": 10,
+          "magnitude": 0.001,
+          "clients": 7,
+          "chunks": 1,
+          "max_abs_err": 3.1044340093662904e-09
+        },
+        {
+          "dim": 10,
+          "magnitude": 1.0,
+          "clients": 2,
+          "chunks": 1,
+          "max_abs_err": 2.579316302764312e-07
+        },
+        {
+          "dim": 10,
+          "magnitude": 1.0,
+          "clients": 7,
+          "chunks": 1,
+          "max_abs_err": 8.800799089492273e-08
+        },
+        {
+          "dim": 10,
+          "magnitude": 10.0,
+          "clients": 2,
+          "chunks": 1,
+          "max_abs_err": 2.185866147641491e-06
+        },
+        {
+          "dim": 10,
+          "magnitude": 10.0,
+          "clients": 7,
+          "chunks": 1,
+          "max_abs_err": 1.989770614940767e-06
+        },
+        {
+          "dim": 4522,
+          "magnitude": 0.001,
+          "clients": 2,
+          "chunks": 2,
+          "max_abs_err": 1.2814970624377628e-08
+        },
+        {
+          "dim": 4522,
+          "magnitude": 0.001,
+          "clients": 7,
+          "chunks": 2,
+          "max_abs_err": 2.4638890121049463e-08
+        },
+        {
+          "dim": 4522,
+          "magnitude": 1.0,
+          "clients": 2,
+          "chunks": 2,
+          "max_abs_err": 4.360288237137411e-07
+        },
+        {
+          "dim": 4522,
+          "magnitude": 1.0,
+          "clients": 7,
+          "chunks": 2,
+          "max_abs_err": 2.189461489887634e-07
+        },
+        {
+          "dim": 4522,
+          "magnitude": 10.0,
+          "clients": 2,
+          "chunks": 2,
+          "max_abs_err": 3.6574945667666725e-06
+        },
+        {
+          "dim": 4522,
+          "magnitude": 10.0,
+          "clients": 7,
+          "chunks": 2,
+          "max_abs_err": 2.422868764284658e-06
+        }
+      ]
+    },
+    {
+      "name": "algebraic laws of encrypted FedAvg",
+      "passed": true,
+      "max_abs_errors": {
+        "order_invariance": 0.0,
+        "idempotence": 5.905822186846876e-07,
+        "linearity": 7.260356227334341e-08,
+        "dropout_renormalisation": 3.585391317173503e-07
+      },
+      "tolerance": 4e-05
+    },
+    {
+      "name": "aggregator blindness & input hardening",
+      "passed": true,
+      "checks": {
+        "public context has no secret key": true,
+        "aggregator context cannot decrypt": true,
+        "aggregator refuses secret context": true,
+        "EncryptedAggregator refuses secret context": true,
+        "public blob smaller than secret blob": true,
+        "rejects garbage bytes": true,
+        "rejects wrong chunk count": true,
+        "rejects truncated ciphertext": true,
+        "ciphertext bytes do not contain the plaintext": true
+      }
+    },
+    {
+      "name": "training equivalence: plain FedAvg vs encrypted FedAvg",
+      "passed": true,
+      "rounds": 6,
+      "max_weight_drift_per_round": [
+        0.0,
+        1.3603676851658975e-07,
+        2.7221496234908216e-07,
+        4.0463456962847033e-07,
+        5.371114701890889e-07,
+        6.673254679956386e-07,
+        7.952808325217831e-07
+      ],
+      "max_weight_drift": 7.952808325217831e-07,
+      "max_test_acc_gap": 0.0,
+      "final_acc_plain": 0.5066666666666667,
+      "final_acc_fhe": 0.5066666666666667
+    },
+    {
+      "name": "cost of encryption (informational)",
+      "passed": true,
+      "n_params": 4522,
+      "ciphertext_chunks": 2,
+      "ciphertext_bytes": 661802,
+      "plaintext_bytes": 36176,
+      "expansion_factor": 18.29395179124281,
+      "encrypt_s": 0.010900900000706315,
+      "decrypt_s": 0.0032145000295713544
+    }
+  ]
+}

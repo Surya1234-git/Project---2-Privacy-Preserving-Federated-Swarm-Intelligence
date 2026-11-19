@@ -1,0 +1,5 @@
+#!/bin/sh
+# Fast safety net before anything leaves your machine: lint + crypto/unit tests.
+set -e
+python3 -m ruff check . 
+python3 -m pytest -q -m "not integration" -x
